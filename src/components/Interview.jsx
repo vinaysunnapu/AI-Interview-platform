@@ -116,7 +116,8 @@ const Interview = ({ skipQuestion, endInterview, state }) => {
 
             <button
               onClick={skipQuestion}
-              className="group flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-5 py-3 text-sm font-medium text-slate-200 shadow-lg transition-all hover:border-indigo-500/50 hover:bg-indigo-500/10 hover:text-indigo-400 active:scale-95"
+              disabled={isAsking}
+              className="group flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-800/80 px-5 py-3 text-sm font-medium text-slate-200 shadow-lg transition-all hover:border-indigo-500/50 hover:bg-indigo-500/10 hover:text-indigo-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-slate-700 disabled:hover:bg-slate-800/80 disabled:hover:text-slate-200"
             >
               <span className="transition-transform group-hover:translate-x-1">
                 ⏭️

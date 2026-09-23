@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { APP_CONSTANT } from "../util/constant";
 import StartInterview from "../components/StartInterview";
 import { startInterviewAPI, submitApi, reportApi, endInterviewApi } from "../services/interview";
-import { playAudio } from "../util/audio";
+import { playAudio, stopAudio } from "../util/audio";
 import Interview from "../components/Interview";
 import { useSpeechToText } from "../hooks/useSpeechToText";
 import Report from "../components/Report";
@@ -103,6 +103,7 @@ const skipQuestion = async() => {
 }
 
 const endInterview = async() => {
+  stopAudio();
     stopListening();
 
     await endInterviewApi(sessionId)

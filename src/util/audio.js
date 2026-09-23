@@ -18,3 +18,7 @@ export const playAudio = (text, onEnd) => {
   window.speechSynthesis.cancel(); // stop previous speech
   window.speechSynthesis.speak(utterance);
 };
+
+export const stopAudio = () => {
+  window.speechSynthesis?.cancel();
+};
