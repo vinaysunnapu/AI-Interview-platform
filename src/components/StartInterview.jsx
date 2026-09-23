@@ -174,20 +174,28 @@ const StartInterview = ({ onClick }) => {
           >
             <div className="mb-3 text-3xl">📄</div>
 
-            <p className="text-sm font-medium text-slate-200">
-              Upload your resume
-            </p>
+            {resume ? (
+              <p className="max-w-full truncate text-sm font-medium text-slate-200">
+                {resume.name}
+              </p>
+            ) : (
+              <>
+                <p className="text-sm font-medium text-slate-200">
+                  Upload your resume
+                </p>
 
-            <p className="mt-1 text-xs text-slate-500">
-              PDF files only
-            </p>
+                <p className="mt-1 text-xs text-slate-500">
+                  PDF files only
+                </p>
+              </>
+            )}
 
             <input
               id="resume"
               type="file"
               accept=".pdf,application/pdf"
               required
-              // className="hidden"
+              className="hidden"
               onChange={handleFileUpload}
             />
           </label>
