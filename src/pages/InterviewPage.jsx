@@ -63,9 +63,8 @@ const InterviewPage = () => {
   },[status, question])
 
   const startInterview = async(data, session_id) => {
+  setLoading(false)
 
-    setLoading(true)
-  
   // response sessionId, status, question
   setSessionId(session_id);
   setQuestion(data.firstQuestion);
@@ -74,7 +73,6 @@ const InterviewPage = () => {
   
   const introText = data.introText
   playAudio(introText, ()=>{
-    setLoading(false)
     setStatus(APP_CONSTANT.ASKING)
   });
 };
@@ -113,38 +111,45 @@ const endInterview = async() => {
 
 const finishInterview = async() => {
     setLoading(true)
-    setStatus(APP_CONSTANT.COMPLETED)
     //call report end point
 
     const data = await reportApi(sessionId)
 
     if(!data){
+    setLoading(false)
         return
     }
 
     setReport(data.result)
+  setStatus(APP_CONSTANT.COMPLETED)
     setLoading(false)
 }
 
 
   return (
     <>
-      {loading && (
-        <div className="mt-4 flex items-center justify-center gap-3 rounded-xl border border-indigo-500/20 bg-indigo-500/10 px-4 py-3 text-sm font-medium text-indigo-400">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-400/30 border-t-indigo-400" />
-          <span>Preparing your interview...</span>
+      {loading ? (
+        <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-sm font-medium text-indigo-400">
+          <div className="flex items-center gap-3 rounded-xl border border-indigo-500/20 bg-indigo-500/10 px-4 py-3">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-400/30 border-t-indigo-400" />
+            <span>Generating your report...</span>
+          </div>
         </div>
+      ) : (
+        <>
+          {status === APP_CONSTANT.IDLE && <StartInterview onClick={startInterview}/>} 
+          {(status === APP_CONSTANT.INTRO ||
+            status === APP_CONSTANT.ASKING ||
+            status === APP_CONSTANT.LISTENING) && (
+            <Interview
+              skipQuestion={skipQuestion}
+              endInterview={endInterview}
+              state={status}
+            />
+          )}
+          {status === APP_CONSTANT.COMPLETED && <Report report={report}/>} 
+        </>
       )}
-      {status === APP_CONSTANT.IDLE && <StartInterview onClick={startInterview}/>}
-      {(status === APP_CONSTANT.ASKING ||
-        status === APP_CONSTANT.LISTENING) && (
-        <Interview
-          skipQuestion={skipQuestion}
-          endInterview={endInterview}
-          state={status}
-        />
-      )}
-      {status === APP_CONSTANT.COMPLETED && <Report report={report}/>}
     </>
   );
 };

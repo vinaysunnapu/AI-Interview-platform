@@ -3,7 +3,8 @@ import listening from "../assets/images/listening.gif";
 import { APP_CONSTANT } from "../util/constant";
 
 const Interview = ({ skipQuestion, endInterview, state }) => {
-  const isAsking = state === APP_CONSTANT.ASKING;
+  const isAsking =
+    state === APP_CONSTANT.INTRO || state === APP_CONSTANT.ASKING;
   const isListening = state === APP_CONSTANT.LISTENING;
 
   return (

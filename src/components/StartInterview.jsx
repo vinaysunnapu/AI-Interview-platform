@@ -67,7 +67,7 @@ const StartInterview = ({ onClick }) => {
       // Start interview endpoint
 
       const data = await startInterviewAPI(resp.session_id)
-
+      setLoading(false)
       onClick(data, resp.session_id)
 
     } catch (error) {
@@ -77,6 +77,20 @@ const StartInterview = ({ onClick }) => {
       setLoading(false)
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-4 text-white">
+        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/10 p-8 text-center shadow-2xl backdrop-blur-xl">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full border-4 border-indigo-400/30 border-t-indigo-400 animate-spin" />
+          <h1 className="text-2xl font-bold">Your interview is being prepared</h1>
+          <p className="mt-3 text-sm leading-6 text-slate-400">
+            We are reviewing your resume and creating questions tailored to the role. This may take a moment.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
 
 
@@ -186,7 +200,7 @@ const StartInterview = ({ onClick }) => {
           disabled={loading}
           className="w-full rounded-xl bg-indigo-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-500 hover:shadow-indigo-500/30 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 active:scale-[0.99]"
         >
-          {loading ? "Generating Questions":"Start Interview →"}
+          Start Interview →
         </button>
       </form>
     </div>
