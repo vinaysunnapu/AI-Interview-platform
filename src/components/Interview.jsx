@@ -1,5 +1,6 @@
 import speaking from "../assets/images/speaking.gif";
 import listening from "../assets/images/listening.gif";
+import CandidateAnswerPanel from "./CandidateAnswerPanel";
 import { APP_CONSTANT } from "../util/constant";
 
 const Interview = ({
@@ -200,18 +201,15 @@ const Interview = ({
                   </button>
                 )}
               </div>
-
-              {transcript && (
-                <div className="mt-4 w-full rounded-xl border border-slate-700 bg-slate-900/60 p-3 text-left text-sm text-slate-200">
-                  <p className="mb-2 text-xs uppercase tracking-[0.2em] text-slate-500">
-                    Your answer
-                  </p>
-                  <p className="whitespace-pre-wrap leading-6">{transcript}</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
+
+        <CandidateAnswerPanel
+          transcript={transcript}
+          isMicMuted={isMicMuted}
+          isAsking={isAsking}
+        />
 
         <div className="mt-8 text-center">
           <p className="text-xs text-slate-600">
