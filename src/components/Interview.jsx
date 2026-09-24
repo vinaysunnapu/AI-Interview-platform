@@ -177,19 +177,28 @@ const Interview = ({
               </div>
 
               <div className="flex w-full flex-col gap-3">
-                <button
-                  type="button"
-                  onClick={onToggleMic}
-                  disabled={isAsking}
-                  className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
-                    isMicMuted
-                      ? "border-slate-700 bg-slate-800/80 text-slate-100 hover:border-indigo-500 hover:bg-indigo-500/10"
-                      : "border-green-500/40 bg-green-500/15 text-green-300 hover:border-green-500/60"
-                  }`}
-                >
-                  <span>{isMicMuted ? "🔇" : "🎙️"}</span>
-                  {isMicMuted ? "Unmute Mic" : "Mute Mic"}
-                </button>
+                <div className="flex w-full flex-col gap-2">
+                  {!isMicMuted && (
+                    <div className="flex items-center justify-center gap-2 self-center rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.2em] text-red-300">
+                      <span className="h-2 w-2 animate-pulse rounded-full bg-red-400" />
+                      Recording
+                    </div>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={onToggleMic}
+                    disabled={isAsking}
+                    className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
+                      isMicMuted
+                        ? "border-slate-700 bg-slate-800/80 text-slate-100 hover:border-indigo-500 hover:bg-indigo-500/10"
+                        : "border-green-500/40 bg-green-500/15 text-green-300 hover:border-green-500/60"
+                    }`}
+                  >
+                    <span>{isMicMuted ? "🔇" : "🎙️"}</span>
+                    {isMicMuted ? "Unmute Mic" : "Mute Mic"}
+                  </button>
+                </div>
 
                 {canSend && (
                   <button

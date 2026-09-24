@@ -13,6 +13,8 @@ export const useSpeechToText = (onSilence) => {
   const silenceTimerRef = useRef(null);
   const onSilenceRef = useRef(onSilence);
   const transcriptRef = useRef("");
+  const finalTranscriptRef = useRef("");
+  const isListeningRef = useRef(false);
   const [transcript, setTranscript] = useState("");
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export const useSpeechToText = (onSilence) => {
 
   const resetTranscript = () => {
     transcriptRef.current = "";
+    finalTranscriptRef.current = "";
     setTranscript("");
   };
 
@@ -44,6 +47,7 @@ export const useSpeechToText = (onSilence) => {
 
   const startListening = () => {
     resetTranscript();
+    isListeningRef.current = true;
 
     const speechWindow = /** @type {any} */ (window);
     const SpeechRecognition =
@@ -59,6 +63,18 @@ export const useSpeechToText = (onSilence) => {
     recognition.continuous = true;
     recognition.lang = "en-US";
     recognition.interimResults = true;
+
+    const restartRecognition = () => {
+      if (!isListeningRef.current) {
+        return;
+      }
+
+      try {
+        recognition.start();
+      } catch (error) {
+        // Ignore start errors if the recognition is already active.
+      }
+    };
 
     recognition.onresult = (event) => {
       let finalText = "";
@@ -76,9 +92,14 @@ export const useSpeechToText = (onSilence) => {
       }
 
       if (finalText) {
-        const updatedTranscript = `${transcriptRef.current} ${finalText}`.trim();
-        transcriptRef.current = updatedTranscript;
-        setTranscript(updatedTranscript);
+        finalTranscriptRef.current = `${finalTranscriptRef.current} ${finalText}`.trim();
+      }
+
+      const liveTranscript = `${finalTranscriptRef.current} ${interimText}`.trim();
+
+      if (liveTranscript) {
+        transcriptRef.current = liveTranscript;
+        setTranscript(liveTranscript);
       }
 
       if (finalText || interimText) {
@@ -88,13 +109,37 @@ export const useSpeechToText = (onSilence) => {
 
     recognition.onerror = (error) => {
       console.error("SpeechRecognition error", error);
+
+      if (error && error.error === "not-allowed") {
+        isListeningRef.current = false;
+        return;
+      }
+
+      if (isListeningRef.current) {
+        setTimeout(() => {
+          restartRecognition();
+        }, 200);
+      }
+    };
+
+    recognition.onend = () => {
+      if (isListeningRef.current) {
+        setTimeout(() => {
+          restartRecognition();
+        }, 150);
+      }
     };
 
     recognitionRef.current = recognition;
-    recognition.start();
+    try {
+      recognition.start();
+    } catch (error) {
+      // if already started, ignore and let onend recover
+    }
   };
 
   const stopListening = () => {
+    isListeningRef.current = false;
     recognitionRef.current?.stop();
     recognitionRef.current = null;
 
