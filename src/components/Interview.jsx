@@ -157,12 +157,12 @@ const Interview = ({
 
               <div
                 className={`mb-4 flex h-64 w-full max-w-sm items-center justify-center overflow-hidden rounded-2xl border ${
-                  isListening
+                  !isMicMuted && isListening
                     ? "border-green-500/30 bg-green-950/40"
                     : "border-slate-800 bg-slate-900/70"
                 }`}
               >
-                {isListening ? (
+                {!isMicMuted && isListening ? (
                   <img
                     src={listening}
                     alt="You are speaking"
