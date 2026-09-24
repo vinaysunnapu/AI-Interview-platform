@@ -17,6 +17,7 @@ const InterviewPage = () => {
     stopListening();
 
     if(!finalText.trim()){
+      skipQuestion()
         return
     }
 

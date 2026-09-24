@@ -6,32 +6,41 @@
 
 import { useEffect, useRef, useState } from "react";
 
+const SILENCE_TIMEOUT_MS = 5 * 1000;
+
 export const useSpeechToText = (onSilence) => {
-  const recognitionRef = useRef(null); // SpeechRecognition
-  const silenceTimerRef = useRef();
+  const recognitionRef = useRef(null);
+  const silenceTimerRef = useRef(null);
   const onSilenceRef = useRef(onSilence);
   const transcriptRef = useRef("");
   const [transcript, setTranscript] = useState("");
 
-  useEffect(()=>{
-    onSilenceRef.current = onSilence
-  },[onSilence])
+  useEffect(() => {
+    onSilenceRef.current = onSilence;
+  }, [onSilence]);
 
-  useEffect(()=>{
-    transcriptRef.current = transcript
-  },[transcript])
+  useEffect(() => {
+    transcriptRef.current = transcript;
+  }, [transcript]);
+
+  const resetSilenceTimer = () => {
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+    }
+
+    silenceTimerRef.current = setTimeout(() => {
+      onSilenceRef.current(transcriptRef.current);
+    }, SILENCE_TIMEOUT_MS);
+  };
 
   const startListening = () => {
     transcriptRef.current = "";
     setTranscript("");
 
     const speechWindow = /** @type {any} */ (window);
-
     const SpeechRecognition =
-    speechWindow.SpeechRecognition ||
-    speechWindow.webkitSpeechRecognition;
-    // const SpeechRecognition =
-    //   window.SpeechRecognition || window.webkitSpeechRecognition;
+      speechWindow.SpeechRecognition ||
+      speechWindow.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       console.error("SpeechRecognition is not supported");
@@ -41,64 +50,54 @@ export const useSpeechToText = (onSilence) => {
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.lang = "en-US";
-
     recognition.interimResults = true;
 
     recognition.onresult = (event) => {
-    let finalText = "";
-    let interimText = "";
+      let finalText = "";
+      let interimText = "";
 
-    for (let i = event.resultIndex; i < event.results.length; i++) {
+      for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         const transcript = result[0].transcript;
 
         if (result.isFinal) {
-        finalText += transcript;
+          finalText += transcript;
         } else {
-        interimText += transcript;
+          interimText += transcript;
         }
-    }
+      }
 
-    if (finalText) {
-      const updatedTranscript =
-        `${transcriptRef.current} ${finalText}`.trim();
+      if (finalText) {
+        const updatedTranscript = `${transcriptRef.current} ${finalText}`.trim();
+        transcriptRef.current = updatedTranscript;
+        setTranscript(updatedTranscript);
+      }
 
-      transcriptRef.current = updatedTranscript;
-      setTranscript(updatedTranscript);
-    }
-
-    if(finalText || interimText){
-
-        resetSilenceTimer()
-    }
-   }
-
-   recognition.onerror = (error) => {
-    console.error("SpeechRecognition error", error);
+      if (finalText || interimText) {
+        resetSilenceTimer();
+      }
     };
 
-    recognition.start();
-    recognitionRef.current = recognition;
+    recognition.onerror = (error) => {
+      console.error("SpeechRecognition error", error);
+    };
 
+    recognitionRef.current = recognition;
+    resetSilenceTimer();
+    recognition.start();
   };
 
-  const resetSilenceTimer = () => {
-  clearTimeout(silenceTimerRef.current);
+  const stopListening = () => {
+    recognitionRef.current?.stop();
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+  };
 
-  silenceTimerRef.current = setTimeout(() => {
-    onSilenceRef.current(transcriptRef.current);
-  }, 3000);
-};
-
-const stopListening = () => {
-  recognitionRef.current?.stop();
-  clearTimeout(silenceTimerRef.current);
-};
-
-return {
-  stopListening,
-  resetSilenceTimer,
-  startListening,
-};
-
+  return {
+    stopListening,
+    resetSilenceTimer,
+    startListening,
+  };
 };
