@@ -1,132 +1,149 @@
 import { useEffect, useState } from "react";
 import { APP_CONSTANT } from "../util/constant";
 import StartInterview from "../components/StartInterview";
-import { startInterviewAPI, submitApi, reportApi, endInterviewApi } from "../services/interview";
+import { submitApi, reportApi, endInterviewApi } from "../services/interview";
 import { playAudio, stopAudio } from "../util/audio";
 import Interview from "../components/Interview";
 import { useSpeechToText } from "../hooks/useSpeechToText";
 import Report from "../components/Report";
+
 const InterviewPage = () => {
   const [sessionId, setSessionId] = useState(null);
   const [status, setStatus] = useState(APP_CONSTANT.IDLE);
   const [question, setQuestion] = useState("");
   const [report, setReport] = useState(null);
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
+  const [isMicMuted, setIsMicMuted] = useState(true);
 
-  const onAutoSubmit = async(finalText) =>{
-    stopListening();
+  const { startListening, stopListening, transcript, resetTranscript } =
+    useSpeechToText();
 
-    if(!finalText.trim()){
-      skipQuestion()
-        return
+  useEffect(() => {
+    if (status === APP_CONSTANT.ASKING) {
+      stopListening();
+      setIsMicMuted(true);
+      resetTranscript();
+
+      playAudio(question, () => {
+        setStatus(APP_CONSTANT.LISTENING);
+      });
+    }
+  }, [status, question]);
+
+  const handleToggleMic = () => {
+    if (status === APP_CONSTANT.INTRO || status === APP_CONSTANT.ASKING) {
+      return;
     }
 
-    // sumbit end point
+    if (isMicMuted) {
+      setIsMicMuted(false);
+      startListening();
+      return;
+    }
+
+    stopListening();
+    setIsMicMuted(true);
+  };
+
+  const handleSubmitAnswer = async () => {
+    const finalAnswer = (transcript || "").trim();
+
+    if (!finalAnswer) {
+      return;
+    }
+
+    stopListening();
+    setIsMicMuted(true);
 
     const payload = {
-        "session_id": sessionId,
-        "answer": finalText,
-        "skip": false
-    }
+      session_id: sessionId,
+      answer: finalAnswer,
+      skip: false,
+    };
 
-    const data = await submitApi(payload)
+    const data = await submitApi(payload);
 
     if (!data) {
-      console.error("Answer submission failed")
-      return
+      console.error("Answer submission failed");
+      return;
     }
 
-    if (data.InterviewEnded){
-        // generate report
-        finishInterview()
-    }
-    else{
-        // Ask next question
-        setQuestion(data.nextQuestion)
-        setStatus(APP_CONSTANT.ASKING)
+    resetTranscript();
+
+    if (data.InterviewEnded) {
+      await finishInterview();
+      return;
     }
 
-  }
+    setQuestion(data.nextQuestion);
+    setStatus(APP_CONSTANT.ASKING);
+  };
 
-  const {startListening, stopListening} = useSpeechToText(onAutoSubmit)
+  const startInterview = async (data, session_id) => {
+    setLoading(false);
+    setSessionId(session_id);
+    setQuestion(data.firstQuestion);
+    setIsMicMuted(true);
+    resetTranscript();
+    setStatus(APP_CONSTANT.INTRO);
 
-  useEffect(()=>{
+    const introText = data.introText;
+    playAudio(introText, () => {
+      setStatus(APP_CONSTANT.ASKING);
+    });
+  };
 
-    if (status === APP_CONSTANT.ASKING){
-        playAudio(question, ()=>{
-            setStatus(APP_CONSTANT.LISTENING)
-
-            // TODO: STT
-            startListening()
-        })
-    }
-
-  },[status, question])
-
-  const startInterview = async(data, session_id) => {
-  setLoading(false)
-
-  // response sessionId, status, question
-  setSessionId(session_id);
-  setQuestion(data.firstQuestion);
-
-  setStatus(APP_CONSTANT.INTRO);
-  
-  const introText = data.introText
-  playAudio(introText, ()=>{
-    setStatus(APP_CONSTANT.ASKING)
-  });
-};
-
-const skipQuestion = async() => {
-    stopListening()
-
-    // sumbit end point
+  const skipQuestion = async () => {
+    stopListening();
+    setIsMicMuted(true);
+    resetTranscript();
 
     const payload = {
-        "session_id": sessionId,
-        "answer": "",
-        "skip": true
+      session_id: sessionId,
+      answer: "",
+      skip: true,
+    };
+
+    const data = await submitApi(payload);
+
+    if (!data) {
+      console.error("Skip question failed");
+      return;
     }
 
-    const data = await submitApi(payload)
-
-    if (data.InterviewEnded){
-        // generate report
-        finishInterview()
-    }
-    else{
-        // Ask next question
-        setQuestion(data.nextQuestion)
-        setStatus(APP_CONSTANT.ASKING)
+    if (data.InterviewEnded) {
+      await finishInterview();
+      return;
     }
 
-}
+    setQuestion(data.nextQuestion);
+    setStatus(APP_CONSTANT.ASKING);
+  };
 
-const endInterview = async() => {
-  stopAudio();
+  const endInterview = async () => {
+    stopAudio();
     stopListening();
+    setIsMicMuted(true);
+    resetTranscript();
 
-    await endInterviewApi(sessionId)
-    await finishInterview()
-}
+    await endInterviewApi(sessionId);
+    await finishInterview();
+  };
 
-const finishInterview = async() => {
-    setLoading(true)
-    //call report end point
+  const finishInterview = async () => {
+    setLoading(true);
 
-    const data = await reportApi(sessionId)
+    const data = await reportApi(sessionId);
 
-    if(!data){
-    setLoading(false)
-        return
+    if (!data) {
+      setLoading(false);
+      return;
     }
 
-    setReport(data.result)
-  setStatus(APP_CONSTANT.COMPLETED)
-    setLoading(false)
-}
-
+    setReport(data.result);
+    setStatus(APP_CONSTANT.COMPLETED);
+    setLoading(false);
+  };
 
   return (
     <>
@@ -139,7 +156,7 @@ const finishInterview = async() => {
         </div>
       ) : (
         <>
-          {status === APP_CONSTANT.IDLE && <StartInterview onClick={startInterview}/>} 
+          {status === APP_CONSTANT.IDLE && <StartInterview onClick={startInterview} />}
           {(status === APP_CONSTANT.INTRO ||
             status === APP_CONSTANT.ASKING ||
             status === APP_CONSTANT.LISTENING) && (
@@ -147,9 +164,13 @@ const finishInterview = async() => {
               skipQuestion={skipQuestion}
               endInterview={endInterview}
               state={status}
+              isMicMuted={isMicMuted}
+              onToggleMic={handleToggleMic}
+              onSubmitAnswer={handleSubmitAnswer}
+              transcript={transcript}
             />
           )}
-          {status === APP_CONSTANT.COMPLETED && <Report report={report}/>} 
+          {status === APP_CONSTANT.COMPLETED && <Report report={report} />}
         </>
       )}
     </>

@@ -6,7 +6,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const SILENCE_TIMEOUT_MS = 5 * 1000;
+const SILENCE_TIMEOUT_MS = 5000;
 
 export const useSpeechToText = (onSilence) => {
   const recognitionRef = useRef(null);
@@ -23,7 +23,16 @@ export const useSpeechToText = (onSilence) => {
     transcriptRef.current = transcript;
   }, [transcript]);
 
+  const resetTranscript = () => {
+    transcriptRef.current = "";
+    setTranscript("");
+  };
+
   const resetSilenceTimer = () => {
+    if (!onSilenceRef.current) {
+      return;
+    }
+
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
     }
@@ -34,8 +43,7 @@ export const useSpeechToText = (onSilence) => {
   };
 
   const startListening = () => {
-    transcriptRef.current = "";
-    setTranscript("");
+    resetTranscript();
 
     const speechWindow = /** @type {any} */ (window);
     const SpeechRecognition =
@@ -83,12 +91,13 @@ export const useSpeechToText = (onSilence) => {
     };
 
     recognitionRef.current = recognition;
-    resetSilenceTimer();
     recognition.start();
   };
 
   const stopListening = () => {
     recognitionRef.current?.stop();
+    recognitionRef.current = null;
+
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current);
       silenceTimerRef.current = null;
@@ -99,5 +108,7 @@ export const useSpeechToText = (onSilence) => {
     stopListening,
     resetSilenceTimer,
     startListening,
+    transcript,
+    resetTranscript,
   };
 };
