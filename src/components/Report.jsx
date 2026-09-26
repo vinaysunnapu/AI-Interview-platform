@@ -2,149 +2,117 @@ const Report = ({ report }) => {
   const score = report?.score ?? "N/A";
   const correctAnswer = report?.correct_answer ?? "N/A";
   const feedback = report?.improvment_area ?? [];
+  const numericScore = Number(score);
+  const scoreProgress = Number.isFinite(numericScore)
+    ? `${Math.min(Math.max(numericScore, 0), 100)}%`
+    : "0%";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 px-4 py-10 text-white">
-      <div className="mx-auto max-w-5xl">
-
-        {/* Header */}
-        <div className="mb-10 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-500/20 text-3xl">
-            📊
-          </div>
-
-          <h1 className="text-3xl font-bold tracking-tight md:text-4xl">
-            Interview Report
-          </h1>
-
-          <p className="mt-2 text-sm text-slate-400">
-            Here is your AI-powered interview performance summary
-          </p>
-        </div>
-
-        {/* Score Cards */}
-        <div className="grid gap-6 md:grid-cols-2">
-
-          {/* Overall Score */}
-          <div className="relative overflow-hidden rounded-2xl border border-indigo-500/20 bg-white/5 p-6 shadow-2xl backdrop-blur-xl">
-            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-indigo-500/10 blur-3xl" />
-
-            <div className="relative">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium uppercase tracking-wider text-slate-400">
-                  Overall Score
-                </h3>
-
-                <span className="rounded-lg bg-indigo-500/10 px-3 py-1 text-lg">
-                  🎯
-                </span>
-              </div>
-
-              <div className="mt-5 flex items-end gap-2">
-                <span className="text-5xl font-bold text-indigo-400">
-                  {score}
-                </span>
-
-                {score !== "N/A" && (
-                  <span className="mb-2 text-sm text-slate-500">
-                    / 100
-                  </span>
-                )}
-              </div>
-
-              <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-800">
-                <div
-                  className="h-full rounded-full bg-indigo-500 transition-all"
-                  style={{
-                    width:
-                      typeof score === "number"
-                        ? `${Math.min(score, 100)}%`
-                        : "0%",
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Correct Answers */}
-          <div className="relative overflow-hidden rounded-2xl border border-green-500/20 bg-white/5 p-6 shadow-2xl backdrop-blur-xl">
-            <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-green-500/10 blur-3xl" />
-
-            <div className="relative">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-medium uppercase tracking-wider text-slate-400">
-                  Correct Answers
-                </h3>
-
-                <span className="rounded-lg bg-green-500/10 px-3 py-1 text-lg">
-                  ✅
-                </span>
-              </div>
-
-              <div className="mt-5">
-                <span className="text-5xl font-bold text-green-400">
-                  {correctAnswer}
-                </span>
-              </div>
-
-              <p className="mt-4 text-sm text-slate-500">
-                Questions answered correctly
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Detailed Feedback */}
-        <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-xl md:p-8">
-
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-500/10 text-xl">
-              💡
-            </div>
-
+    <div className="min-h-screen bg-[#10211d] px-5 py-6 text-[#f1f5ee] sm:px-8 lg:px-10">
+      <div className="mx-auto max-w-7xl">
+        <header className="flex items-center justify-between border-b border-white/15 pb-5">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#c6ed79] text-sm font-bold text-[#10211d]">
+              AI
+            </span>
             <div>
-              <h3 className="text-xl font-semibold">
-                Detailed Feedback
-              </h3>
+              <p className="text-sm font-semibold">Interview Studio</p>
+              <p className="mt-0.5 text-xs text-[#91a59a]">Session debrief</p>
+            </div>
+          </div>
+          <span className="rounded-full border border-[#72c49a]/30 bg-[#72c49a]/10 px-3 py-1.5 text-xs font-medium text-[#9ce0b9]">
+            Interview complete
+          </span>
+        </header>
 
-              <p className="mt-1 text-sm text-slate-500">
-                Areas where you can improve
+        <main className="py-8 sm:py-12">
+          <div className="mb-8 grid gap-6 border-b border-white/15 pb-8 md:grid-cols-[1fr_auto] md:items-end">
+            <div>
+              <p className="mb-3 flex items-center gap-2 text-sm font-medium text-[#c6ed79]">
+                <span className="h-2 w-2 rounded-full bg-[#c6ed79]" />
+                Your results
               </p>
+              <h1 className="font-serif text-4xl leading-tight sm:text-5xl">
+                Interview debrief
+              </h1>
+              <p className="mt-3 max-w-xl text-sm leading-6 text-[#b8c7be] sm:text-base">
+                A snapshot of how you did, with focused ideas for your next practice.
+              </p>
+            </div>
+            <div className="text-left md:text-right">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#91a59a]">
+                Keep the momentum
+              </p>
+              <p className="mt-1 text-sm text-[#d4f39c]">Every round is progress.</p>
             </div>
           </div>
 
-          {Array.isArray(feedback) && feedback.length > 0 ? (
-            <ul className="space-y-3">
-              {feedback.map((point, index) => (
-                <li
-                  key={index}
-                  className="flex items-start gap-3 rounded-xl border border-slate-800 bg-slate-900/60 p-4 transition hover:border-indigo-500/30 hover:bg-slate-900"
-                >
-                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-500/10 text-xs font-semibold text-indigo-400">
-                    {index + 1}
-                  </span>
+          <section aria-label="Interview results" className="grid gap-4 md:grid-cols-2">
+            <article className="rounded-lg bg-[#c6ed79] p-6 text-[#17392b] sm:p-8">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-[#42604d]">Overall score</p>
+                  <p className="mt-1 text-xs text-[#567b55]">Interview performance</p>
+                </div>
+                <span aria-hidden="true" className="text-2xl">✳</span>
+              </div>
+              <div className="mt-7 flex items-baseline gap-2">
+                <span className="font-serif text-6xl leading-none sm:text-7xl">{score}</span>
+                {score !== "N/A" && <span className="text-sm text-[#42604d]">/ 100</span>}
+              </div>
+              <div
+                className="mt-6 h-2 overflow-hidden rounded-full bg-[#17392b]/15"
+                role="progressbar"
+                aria-label="Overall score"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Number.isFinite(numericScore) ? Math.min(Math.max(numericScore, 0), 100) : 0}
+              >
+                <div className="h-full rounded-full bg-[#17392b] transition-all" style={{ width: scoreProgress }} />
+              </div>
+            </article>
 
-                  <p className="text-sm leading-6 text-slate-300">
-                    {point}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-6 text-center">
-              <p className="text-sm text-slate-500">
-                No feedback available.
-              </p>
+            <article className="flex flex-col justify-between rounded-lg border border-white/15 bg-[#153027] p-6 sm:p-8">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold text-[#f1f5ee]">Correct answers</p>
+                  <p className="mt-1 text-xs text-[#91a59a]">Questions answered correctly</p>
+                </div>
+                <span aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#72c49a]/10 text-lg text-[#9ce0b9]">✓</span>
+              </div>
+              <div className="mt-7 font-serif text-6xl leading-none text-[#9ce0b9] sm:text-7xl">
+                {correctAnswer}
+              </div>
+            </article>
+          </section>
+
+          <section className="mt-8 rounded-lg bg-[#edf3ee] p-5 text-[#162821] sm:p-8" aria-labelledby="feedback-title">
+            <div className="mb-6 flex flex-col gap-2 border-b border-[#d3ded5] pb-5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="mb-2 text-sm font-semibold text-[#567b55]">Next steps</p>
+                <h2 id="feedback-title" className="font-serif text-3xl sm:text-4xl">
+                  Areas to strengthen
+                </h2>
+              </div>
+              <p className="text-sm text-[#718477]">Use these as prompts for your next round.</p>
             </div>
-          )}
-        </div>
 
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <p className="text-xs text-slate-600">
-            🚀 Keep practicing and improve with every interview.
-          </p>
-        </div>
+            {Array.isArray(feedback) && feedback.length > 0 ? (
+              <ol className="divide-y divide-[#d3ded5]">
+                {feedback.map((point, index) => (
+                  <li key={`${index}-${point}`} className="flex items-start gap-4 py-4 first:pt-0 last:pb-0">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#dce9de] text-xs font-semibold text-[#42604d]">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <p className="pt-1 text-sm leading-6 text-[#344b3c]">{point}</p>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="py-3 text-sm text-[#718477]">No additional feedback is available for this session.</p>
+            )}
+          </section>
+        </main>
       </div>
     </div>
   );

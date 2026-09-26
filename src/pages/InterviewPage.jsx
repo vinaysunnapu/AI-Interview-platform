@@ -174,10 +174,10 @@ const InterviewPage = () => {
   return (
     <>
       {loading ? (
-        <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 text-sm font-medium text-indigo-400">
-          <div className="flex items-center gap-3 rounded-xl border border-indigo-500/20 bg-indigo-500/10 px-4 py-3">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-400/30 border-t-indigo-400" />
-            <span>Generating your report...</span>
+        <div className="flex min-h-screen items-center justify-center bg-[#10211d] px-4 text-sm font-medium text-[#d4f39c]">
+          <div className="flex items-center gap-4 rounded-lg border border-white/15 bg-[#153027] px-5 py-4">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#c6ed79]/30 border-t-[#c6ed79]" />
+            <span>Preparing your interview debrief...</span>
           </div>
         </div>
       ) : (
