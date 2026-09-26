@@ -75,7 +75,7 @@ const InterviewPage = () => {
       return;
     }
 
-    setQuestion(data.nextQuestion);
+    setQuestion(`Thank you for your answer. Let's move on to the next question. ${data.nextQuestion}`);
     setStatus(APP_CONSTANT.ASKING);
   };
 
