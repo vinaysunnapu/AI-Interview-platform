@@ -10,10 +10,13 @@ const Interview = ({
   isMicMuted,
   onToggleMic,
   onSubmitAnswer,
+  onRepeatQuestion,
   transcript,
 }) => {
   const isAsking =
-    state === APP_CONSTANT.INTRO || state === APP_CONSTANT.ASKING;
+    state === APP_CONSTANT.INTRO ||
+    state === APP_CONSTANT.ASKING ||
+    state === APP_CONSTANT.REPLAYING;
   const isListening = state === APP_CONSTANT.LISTENING;
   const canSend = transcript && transcript.trim().length > 0;
 
@@ -50,7 +53,9 @@ const Interview = ({
               />
 
               {isAsking
-                ? "AI is asking a question"
+                ? state === APP_CONSTANT.REPLAYING
+                  ? "AI is repeating the question"
+                  : "AI is asking a question"
                 : isListening
                 ? "Ready for your answer"
                 : "Waiting..."}
@@ -81,7 +86,9 @@ const Interview = ({
 
               <p className="mb-6 text-sm text-slate-400">
                 {isAsking
-                  ? "The interviewer is speaking"
+                  ? state === APP_CONSTANT.REPLAYING
+                    ? "The interviewer is repeating the question"
+                    : "The interviewer is speaking"
                   : "Waiting for the next question"}
               </p>
 
@@ -109,6 +116,16 @@ const Interview = ({
           </div>
 
           <div className="flex flex-row items-center justify-center gap-3 lg:flex-col">
+            <button
+              type="button"
+              onClick={onRepeatQuestion}
+              disabled={isAsking}
+              className="group flex items-center gap-2 rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-5 py-3 text-sm font-medium text-indigo-300 shadow-lg transition-all hover:border-indigo-500/60 hover:bg-indigo-500/20 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span aria-hidden="true">🔁</span>
+              Repeat question
+            </button>
+
             <button
               onClick={skipQuestion}
               disabled={isAsking}

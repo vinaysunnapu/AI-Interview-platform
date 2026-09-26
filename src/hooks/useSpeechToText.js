@@ -45,8 +45,10 @@ export const useSpeechToText = (onSilence) => {
     }, SILENCE_TIMEOUT_MS);
   };
 
-  const startListening = () => {
-    resetTranscript();
+  const startListening = ({ reset = true } = {}) => {
+    if (reset) {
+      resetTranscript();
+    }
     isListeningRef.current = true;
 
     const speechWindow = /** @type {any} */ (window);
@@ -71,7 +73,7 @@ export const useSpeechToText = (onSilence) => {
 
       try {
         recognition.start();
-      } catch (error) {
+      } catch {
         // Ignore start errors if the recognition is already active.
       }
     };
@@ -133,7 +135,7 @@ export const useSpeechToText = (onSilence) => {
     recognitionRef.current = recognition;
     try {
       recognition.start();
-    } catch (error) {
+    } catch {
       // if already started, ignore and let onend recover
     }
   };

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { APP_CONSTANT } from "../util/constant";
 import StartInterview from "../components/StartInterview";
 import { submitApi, reportApi, endInterviewApi } from "../services/interview";
@@ -11,24 +11,47 @@ const InterviewPage = () => {
   const [sessionId, setSessionId] = useState(null);
   const [status, setStatus] = useState(APP_CONSTANT.IDLE);
   const [question, setQuestion] = useState("");
+  const [questionAcknowledgement, setQuestionAcknowledgement] = useState("");
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(true);
+  const resumeMicAfterReplay = useRef(false);
 
   const { startListening, stopListening, transcript, resetTranscript } =
     useSpeechToText();
+  const speechControls = useRef({ startListening, stopListening, resetTranscript });
+  speechControls.current = { startListening, stopListening, resetTranscript };
 
   useEffect(() => {
-    if (status === APP_CONSTANT.ASKING) {
-      stopListening();
-      setIsMicMuted(true);
-      resetTranscript();
+    if (status === APP_CONSTANT.ASKING || status === APP_CONSTANT.REPLAYING) {
+      speechControls.current.stopListening();
+      if (status === APP_CONSTANT.ASKING) {
+        speechControls.current.resetTranscript();
+      }
 
-      playAudio(question, () => {
+      const speech = status === APP_CONSTANT.REPLAYING
+        ? question
+        : `${questionAcknowledgement} ${question}`.trim();
+
+      playAudio(speech, () => {
         setStatus(APP_CONSTANT.LISTENING);
+        if (status === APP_CONSTANT.REPLAYING && resumeMicAfterReplay.current) {
+          setIsMicMuted(false);
+          speechControls.current.startListening({ reset: false });
+        }
       });
     }
-  }, [status, question]);
+  }, [status, question, questionAcknowledgement]);
+
+  const handleRepeatQuestion = () => {
+    if (status !== APP_CONSTANT.LISTENING) {
+      return;
+    }
+
+    resumeMicAfterReplay.current = !isMicMuted;
+    setIsMicMuted(true);
+    setStatus(APP_CONSTANT.REPLAYING);
+  };
 
   const handleToggleMic = () => {
     if (status === APP_CONSTANT.INTRO || status === APP_CONSTANT.ASKING) {
@@ -75,7 +98,8 @@ const InterviewPage = () => {
       return;
     }
 
-    setQuestion(`Thank you for your answer. Let's move on to the next question. ${data.nextQuestion}`);
+    setQuestion(data.nextQuestion);
+    setQuestionAcknowledgement("Thank you for your answer. Let's move on to the next question.");
     setStatus(APP_CONSTANT.ASKING);
   };
 
@@ -83,6 +107,7 @@ const InterviewPage = () => {
     setLoading(false);
     setSessionId(session_id);
     setQuestion(data.firstQuestion);
+    setQuestionAcknowledgement("");
     setIsMicMuted(true);
     resetTranscript();
     setStatus(APP_CONSTANT.INTRO);
@@ -117,6 +142,7 @@ const InterviewPage = () => {
     }
 
     setQuestion(data.nextQuestion);
+    setQuestionAcknowledgement("");
     setStatus(APP_CONSTANT.ASKING);
   };
 
@@ -159,6 +185,7 @@ const InterviewPage = () => {
           {status === APP_CONSTANT.IDLE && <StartInterview onClick={startInterview} />}
           {(status === APP_CONSTANT.INTRO ||
             status === APP_CONSTANT.ASKING ||
+            status === APP_CONSTANT.REPLAYING ||
             status === APP_CONSTANT.LISTENING) && (
             <Interview
               skipQuestion={skipQuestion}
@@ -167,6 +194,7 @@ const InterviewPage = () => {
               isMicMuted={isMicMuted}
               onToggleMic={handleToggleMic}
               onSubmitAnswer={handleSubmitAnswer}
+              onRepeatQuestion={handleRepeatQuestion}
               transcript={transcript}
             />
           )}
