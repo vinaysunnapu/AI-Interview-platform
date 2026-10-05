@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import listening from "../assets/images/listening.gif";
 import { generateQuestionsAPI, startInterviewAPI } from "../services/interview";
 import { INTERVIEW_VOICES } from "../util/audio";
@@ -12,6 +12,53 @@ const StartInterview = ({ onClick }) => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [voiceId, setVoiceId] = useState(INTERVIEW_VOICES[0].id);
+  const [isVoiceMenuOpen, setIsVoiceMenuOpen] = useState(false);
+  const voiceMenuRef = useRef(null);
+  const voiceTriggerRef = useRef(null);
+  const voiceOptionRefs = useRef([]);
+  const selectedVoice = INTERVIEW_VOICES.find((voice) => voice.id === voiceId);
+
+  useEffect(() => {
+    if (!isVoiceMenuOpen) {
+      return undefined;
+    }
+
+    const closeOnOutsideClick = (event) => {
+      if (!voiceMenuRef.current?.contains(event.target)) {
+        setIsVoiceMenuOpen(false);
+      }
+    };
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") {
+        setIsVoiceMenuOpen(false);
+        voiceTriggerRef.current?.focus();
+      }
+    };
+
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("mousedown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isVoiceMenuOpen]);
+
+  useEffect(() => {
+    if (isVoiceMenuOpen) {
+      const selectedIndex = INTERVIEW_VOICES.findIndex((voice) => voice.id === voiceId);
+      voiceOptionRefs.current[selectedIndex]?.focus();
+    }
+  }, [isVoiceMenuOpen, voiceId]);
+
+  const handleVoiceOptionKeyDown = (event, index) => {
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const direction = event.key === "ArrowDown" ? 1 : -1;
+      const nextIndex =
+        (index + direction + INTERVIEW_VOICES.length) % INTERVIEW_VOICES.length;
+      voiceOptionRefs.current[nextIndex]?.focus();
+    }
+  };
 
   const handleFileUpload = (event) => {
     const file = event.currentTarget.files?.[0];
@@ -92,23 +139,99 @@ const StartInterview = ({ onClick }) => {
           </span>
           <span className="text-sm font-semibold">Interview Studio</span>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-[#b8c7be]">
+        <div className="flex items-center gap-3 rounded-full border border-white/15 bg-[#19382c]/80 px-2 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-sm">
+          <span className="rounded-full bg-[#c6ed79]/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#d9f4a9]">
             New session
           </span>
-          <select
-            aria-label="Interviewer voice"
-            title="Uses an Indian English voice available on your device"
-            value={voiceId}
-            onChange={(event) => setVoiceId(event.target.value)}
-            className="max-w-32 rounded-full border border-white/15 bg-[#19382c] px-3 py-1.5 text-xs text-[#f1f5ee] outline-none focus:border-[#c6ed79] sm:max-w-none"
-          >
-            {INTERVIEW_VOICES.map((voice) => (
-              <option key={voice.id} value={voice.id}>
-                {voice.label}
-              </option>
-            ))}
-          </select>
+          <div className="relative" ref={voiceMenuRef}>
+            <button
+              ref={voiceTriggerRef}
+              type="button"
+              aria-label={`Interviewer voice: ${selectedVoice.label}`}
+              aria-haspopup="listbox"
+              aria-expanded={isVoiceMenuOpen}
+              onClick={() => setIsVoiceMenuOpen((open) => !open)}
+              onKeyDown={(event) => {
+                if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                  event.preventDefault();
+                  setIsVoiceMenuOpen(true);
+                }
+              }}
+              className="flex min-h-10 items-center gap-2 rounded-full border border-[#c6ed79]/25 bg-[#10211d] px-3.5 text-xs font-semibold text-[#f1f5ee] shadow-sm transition hover:border-[#c6ed79]/60 hover:bg-[#173027] focus:outline-none focus:ring-2 focus:ring-[#c6ed79]/30"
+            >
+              <svg
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-4 w-4 text-[#c6ed79]"
+                aria-hidden="true"
+              >
+                <path d="M9 4L5 7H2.5V13H5L9 16V4Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                <path d="M12 7C13.7 8.7 13.7 11.3 12 13M14.5 4.5C17.5 7.5 17.5 12.5 14.5 15.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <span>{selectedVoice.label}</span>
+              <svg
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className={`h-3.5 w-3.5 text-[#91a59a] transition-transform ${isVoiceMenuOpen ? "rotate-180" : ""}`}
+                aria-hidden="true"
+              >
+                <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+            {isVoiceMenuOpen && (
+              <div
+                role="listbox"
+                aria-label="Choose interviewer voice"
+                className="absolute right-0 z-20 mt-2 w-52 overflow-hidden rounded-xl border border-white/10 bg-[#153027] p-1.5 shadow-[0_16px_40px_rgba(0,0,0,0.4)] ring-1 ring-black/20"
+              >
+                <p className="px-3 pb-1.5 pt-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#91a59a]">
+                  Interviewer voice
+                </p>
+                {INTERVIEW_VOICES.map((voice, index) => {
+                  const isSelected = voice.id === voiceId;
+
+                  return (
+                    <button
+                      key={voice.id}
+                      ref={(element) => {
+                        voiceOptionRefs.current[index] = element;
+                      }}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      tabIndex={-1}
+                      onClick={() => {
+                        setVoiceId(voice.id);
+                        setIsVoiceMenuOpen(false);
+                        voiceTriggerRef.current?.focus();
+                      }}
+                      onKeyDown={(event) => handleVoiceOptionKeyDown(event, index)}
+                      className={`flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-left text-sm transition focus:outline-none focus:ring-1 focus:ring-[#c6ed79]/50 ${
+                        isSelected
+                          ? "bg-[#c6ed79]/10 text-[#d9f4a9]"
+                          : "text-[#d5dfd7] hover:bg-white/5 hover:text-white"
+                      }`}
+                    >
+                      <span>{voice.label}</span>
+                      {isSelected && (
+                        <svg
+                          viewBox="0 0 20 20"
+                          fill="none"
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 text-[#c6ed79]"
+                          aria-hidden="true"
+                        >
+                          <path d="M4 10.5L8 14L16 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
