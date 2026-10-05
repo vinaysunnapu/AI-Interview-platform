@@ -1,6 +1,7 @@
 import { useState } from "react";
 import listening from "../assets/images/listening.gif";
 import { generateQuestionsAPI, startInterviewAPI } from "../services/interview";
+import { INTERVIEW_VOICES } from "../util/audio";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -10,6 +11,7 @@ const StartInterview = ({ onClick }) => {
   const [resume, setResume] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [voiceId, setVoiceId] = useState(INTERVIEW_VOICES[0].id);
 
   const handleFileUpload = (event) => {
     const file = event.currentTarget.files?.[0];
@@ -68,7 +70,7 @@ const StartInterview = ({ onClick }) => {
         return;
       }
 
-      onClick(interview, response.session_id);
+      onClick(interview, response.session_id, voiceId);
     } catch (requestError) {
       console.error("Interview setup failed:", requestError);
       setError("Something went wrong while preparing your interview. Try again.");
@@ -83,16 +85,31 @@ const StartInterview = ({ onClick }) => {
 
   return (
     <div className="min-h-screen bg-[#10211d] text-[#f1f5ee]">
-      <header className="mx-auto flex w-full max-w-7xl items-center justify-between border-b border-white/10 px-5 py-5 md:px-8">
+      <header className="mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-5 md:px-8">
         <div className="flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#c6ed79] text-sm font-bold text-[#10211d]">
             AI
           </span>
           <span className="text-sm font-semibold">Interview Studio</span>
         </div>
-        <span className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-[#b8c7be]">
-          New session
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="rounded-full border border-white/15 px-3 py-1.5 text-xs text-[#b8c7be]">
+            New session
+          </span>
+          <select
+            aria-label="Interviewer voice"
+            title="Uses an Indian English voice available on your device"
+            value={voiceId}
+            onChange={(event) => setVoiceId(event.target.value)}
+            className="max-w-32 rounded-full border border-white/15 bg-[#19382c] px-3 py-1.5 text-xs text-[#f1f5ee] outline-none focus:border-[#c6ed79] sm:max-w-none"
+          >
+            {INTERVIEW_VOICES.map((voice) => (
+              <option key={voice.id} value={voice.id}>
+                {voice.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </header>
 
       <main className="mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-8 px-5 py-6 md:px-8 lg:min-h-[calc(100vh-81px)] lg:grid-cols-[0.92fr_1.08fr] lg:gap-14 lg:py-10">
@@ -259,4 +276,3 @@ const StartInterview = ({ onClick }) => {
 };
 
 export default StartInterview;
-

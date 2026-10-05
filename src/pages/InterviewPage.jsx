@@ -17,6 +17,7 @@ const ACTIVE_STATUSES = [
 
 const InterviewPage = () => {
   const [sessionId, setSessionId] = useState(null);
+  const [voiceId, setVoiceId] = useState("vinay");
   const [status, setStatus] = useState(APP_CONSTANT.IDLE);
   const [question, setQuestion] = useState("");
   const [introText, setIntroText] = useState("");
@@ -92,13 +93,13 @@ const InterviewPage = () => {
         setIsMicMuted(false);
         speechControls.current.startListening({ reset: false });
       }
-    });
+    }, voiceId);
 
     return () => {
       audioRunRef.current += 1;
       stopAudio();
     };
-  }, [status, question, questionAcknowledgement, introText]);
+  }, [status, question, questionAcknowledgement, introText, voiceId]);
 
   const timerActive = Boolean(sessionId) && ACTIVE_STATUSES.includes(status);
 
@@ -247,8 +248,9 @@ const InterviewPage = () => {
     }
   };
 
-  const startInterview = (data, session_id) => {
+  const startInterview = (data, session_id, selectedVoiceId) => {
     setSessionId(session_id);
+    setVoiceId(selectedVoiceId);
     setQuestion(data.firstQuestion);
     setIntroText(data.introText || "");
     setQuestionAcknowledgement("");
