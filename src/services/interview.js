@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://127.0.0.1:8000/interview";
+const BASE_URL = "https://ai-interview-platform-backend-krwy.onrender.com/interview";
 
 export const startInterviewAPI = async (sessionId) => {
   const response = await axios.get(`${BASE_URL}/start/${sessionId}`);
