@@ -1,7 +1,17 @@
 const Report = ({ report }) => {
   const score = report?.score ?? "N/A";
   const correctAnswer = report?.correct_answer ?? "N/A";
-  const feedback = report?.improvment_area ?? [];
+  const totalAnswers = report?.total_answers ?? "N/A";
+  const feedback = Array.isArray(report?.improvment_area)
+    ? report.improvment_area
+    : report?.improvment_area
+    ? [report.improvment_area]
+    : [];
+  const strengths = Array.isArray(report?.strengths)
+    ? report.strengths
+    : report?.strengths
+    ? [report.strengths]
+    : [];
   const numericScore = Number(score);
   const scoreProgress = Number.isFinite(numericScore)
     ? `${Math.min(Math.max(numericScore, 0), 100)}%`
@@ -47,7 +57,7 @@ const Report = ({ report }) => {
             </div>
           </div>
 
-          <section aria-label="Interview results" className="grid gap-4 md:grid-cols-2">
+          <section aria-label="Interview results" className="grid gap-4 md:grid-cols-3">
             <article className="rounded-lg bg-[#c6ed79] p-6 text-[#17392b] sm:p-8">
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -84,7 +94,38 @@ const Report = ({ report }) => {
                 {correctAnswer}
               </div>
             </article>
+
+            <article className="flex flex-col justify-between rounded-lg border border-white/15 bg-[#153027] p-6 sm:p-8">
+              <div>
+                <p className="text-sm font-semibold text-[#f1f5ee]">Total answers</p>
+                <p className="mt-1 text-xs text-[#91a59a]">Turns completed</p>
+              </div>
+              <div className="mt-7 font-serif text-6xl leading-none text-[#d4f39c] sm:text-7xl">
+                {totalAnswers}
+              </div>
+            </article>
           </section>
+
+          {(report?.summary || strengths.length > 0) && (
+            <section className="mt-8 grid gap-6 border-y border-white/15 py-7 md:grid-cols-2">
+              {report?.summary && (
+                <div>
+                  <h2 className="text-sm font-semibold text-[#f1f5ee]">Summary</h2>
+                  <p className="mt-3 text-sm leading-7 text-[#b8c7be]">{report.summary}</p>
+                </div>
+              )}
+              {strengths.length > 0 && (
+                <div>
+                  <h2 className="text-sm font-semibold text-[#f1f5ee]">Strengths</h2>
+                  <ul className="mt-3 space-y-2 text-sm leading-6 text-[#b8c7be]">
+                    {strengths.map((strength, index) => (
+                      <li key={`${index}-${strength}`}>{strength}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </section>
+          )}
 
           <section className="mt-8 rounded-lg bg-[#edf3ee] p-5 text-[#162821] sm:p-8" aria-labelledby="feedback-title">
             <div className="mb-6 flex flex-col gap-2 border-b border-[#d3ded5] pb-5 sm:flex-row sm:items-end sm:justify-between">

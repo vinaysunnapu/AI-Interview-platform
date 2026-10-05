@@ -11,14 +11,29 @@ const Interview = ({
   onToggleMic,
   onSubmitAnswer,
   onRepeatQuestion,
+  onRetryTurn,
+  onRetryEnd,
+  onRetryReport,
   transcript,
+  question,
+  interviewerResponse,
+  questionType,
+  remainingSeconds,
+  error,
+  isSubmitting,
+  canRetryEnd,
+  canRetryReport,
 }) => {
   const isAsking =
     state === APP_CONSTANT.INTRO ||
     state === APP_CONSTANT.ASKING ||
     state === APP_CONSTANT.REPLAYING;
   const isListening = state === APP_CONSTANT.LISTENING;
+  const isBusy = isSubmitting || state === APP_CONSTANT.ENDING || state === APP_CONSTANT.SUBMITTING;
+  const isExpired = remainingSeconds === 0;
+  const controlsDisabled = isAsking || isBusy || isExpired;
   const canSend = transcript && transcript.trim().length > 0;
+  const timerLabel = `${Math.floor(remainingSeconds / 60).toString().padStart(2, "0")}:${(remainingSeconds % 60).toString().padStart(2, "0")}`;
 
   return (
     <div className="min-h-screen bg-[#10211d] px-4 py-6 text-[#f1f5ee] sm:px-6 lg:px-8">
@@ -31,7 +46,16 @@ const Interview = ({
               <p className="mt-0.5 text-xs text-[#91a59a]">Live practice session</p>
             </div>
           </div>
-          <div className="flex justify-start sm:justify-end">
+          <div className="flex items-center gap-3 sm:justify-end">
+            <div
+              role="timer"
+              aria-label="Time remaining"
+              className={`rounded-lg border px-3 py-2 text-sm font-semibold tabular-nums ${
+                isExpired ? "border-[#d58b76]/40 text-[#efb3a1]" : "border-white/15 text-[#f1f5ee]"
+              }`}
+            >
+              {timerLabel}
+            </div>
             <div
               className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium ${
                 isAsking
@@ -51,7 +75,11 @@ const Interview = ({
                 }`}
               />
 
-              {isAsking
+              {isBusy
+                ? state === APP_CONSTANT.ENDING
+                  ? "Finishing interview"
+                  : "Sending your answer"
+                : isAsking
                 ? state === APP_CONSTANT.REPLAYING
                   ? "AI is repeating the question"
                   : "AI is asking a question"
@@ -111,6 +139,18 @@ const Interview = ({
                   </div>
                 )}
               </div>
+
+              <div className="mt-5 w-full max-w-xl text-center" aria-live="polite">
+                {interviewerResponse && (
+                  <p className="mb-3 text-sm leading-6 text-[#b8c7be]">{interviewerResponse}</p>
+                )}
+                <p className="text-base font-medium leading-7 text-[#f1f5ee]">{question}</p>
+                {questionType && (
+                  <span className="mt-3 inline-flex rounded-full border border-[#c6ed79]/25 bg-[#c6ed79]/10 px-3 py-1 text-xs font-medium text-[#d4f39c]">
+                    {questionType === "follow_up" ? "Follow-up" : questionType === "new_topic" ? "New topic" : questionType}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
@@ -167,12 +207,25 @@ const Interview = ({
           </div>
         </div>
 
+        {error && (
+          <div role="alert" className="mt-5 flex flex-col gap-3 rounded-lg border border-[#d58b76]/35 bg-[#d58b76]/10 px-4 py-3 text-sm text-[#efb3a1] sm:flex-row sm:items-center sm:justify-between">
+            <p>{error}</p>
+            {canRetryReport ? (
+              <button type="button" onClick={onRetryReport} className="shrink-0 font-semibold underline underline-offset-4">Retry report</button>
+            ) : canRetryEnd ? (
+              <button type="button" onClick={onRetryEnd} className="shrink-0 font-semibold underline underline-offset-4">Retry ending interview</button>
+            ) : (
+              <button type="button" onClick={onRetryTurn} disabled={isBusy} className="shrink-0 font-semibold underline underline-offset-4 disabled:opacity-50">Retry request</button>
+            )}
+          </div>
+        )}
+
         <div className="mt-5 flex flex-col gap-4 rounded-lg border border-white/15 bg-[#153027] p-4 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={onRepeatQuestion}
-              disabled={isAsking}
+              disabled={controlsDisabled}
               className="flex min-h-11 items-center gap-2 rounded-lg border border-[#c6ed79]/30 bg-[#c6ed79]/10 px-4 py-2.5 text-sm font-medium text-[#d4f39c] transition hover:border-[#c6ed79]/60 hover:bg-[#c6ed79]/20 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <span aria-hidden="true">🔁</span>
@@ -182,7 +235,7 @@ const Interview = ({
             <button
               type="button"
               onClick={skipQuestion}
-              disabled={isAsking}
+              disabled={controlsDisabled}
               className="flex min-h-11 items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-medium text-[#dce7df] transition hover:border-[#c6ed79]/40 hover:bg-white/10 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <span aria-hidden="true">⏭️</span>
@@ -192,7 +245,8 @@ const Interview = ({
             <button
               type="button"
               onClick={endInterview}
-              className="flex min-h-11 items-center gap-2 rounded-lg border border-[#d58b76]/35 bg-[#d58b76]/10 px-4 py-2.5 text-sm font-medium text-[#efb3a1] transition hover:border-[#d58b76]/60 hover:bg-[#d58b76]/20 active:scale-95"
+              disabled={isBusy}
+              className="flex min-h-11 items-center gap-2 rounded-lg border border-[#d58b76]/35 bg-[#d58b76]/10 px-4 py-2.5 text-sm font-medium text-[#efb3a1] transition hover:border-[#d58b76]/60 hover:bg-[#d58b76]/20 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <span aria-hidden="true">⏹️</span>
               End interview
@@ -210,7 +264,7 @@ const Interview = ({
             <button
               type="button"
               onClick={onToggleMic}
-              disabled={isAsking}
+              disabled={controlsDisabled}
               className={`flex min-h-11 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 ${
                 isMicMuted
                   ? "border-white/15 bg-white/5 text-[#f1f5ee] hover:border-[#c6ed79]/50 hover:bg-white/10"
@@ -224,10 +278,10 @@ const Interview = ({
             <button
               type="button"
               onClick={onSubmitAnswer}
-              disabled={!canSend || isAsking}
+              disabled={!canSend || controlsDisabled}
               className="flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#c6ed79] px-5 py-2.5 text-sm font-semibold text-[#17392b] transition hover:bg-[#d4f39c] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Send answer
+              {isSubmitting ? "Sending answer" : "Send answer"}
             </button>
           </div>
         </div>
